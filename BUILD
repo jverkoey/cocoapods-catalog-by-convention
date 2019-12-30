@@ -1,11 +1,29 @@
+# Copyright 2016-present Google Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 # Description:
 # Tools for building a Catalog by Convention.
+
+load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_ios_warnings//:strict_warnings_objc_library.bzl", "strict_warnings_objc_library")
+load("@bazel_apple_framework_relative_headers//:apple_framework_relative_headers.bzl", "apple_framework_relative_headers")
 
 licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-objc_library(
+strict_warnings_objc_library(
     name = "CatalogByConvention",
     srcs = glob([
         "src/*.m",
@@ -15,25 +33,25 @@ objc_library(
         "src/*.h",
         "src/private/*.h",
     ]),
-    includes = ["src"],
+    enable_modules = 1,
+    module_name = "CatalogByConvention",
     visibility = ["//visibility:public"],
-    copts = [
-        "-Wall",  # Standard known-to-be-bugs warnings.
-        "-Wcast-align",  # Casting a pointer such that alignment is broken.
-        "-Wconversion",  # Numeric conversion warnings.
-        "-Wdocumentation",  # Documentation checks.
-        "-Werror",  # All warnings as errors.
-        "-Wextra",  # Many useful extra warnings.
-        "-Wimplicit-atomic-properties",  # Dynamic properties should be non-atomic.
-        "-Wmissing-prototypes",  # Global function is defined without a previous prototype.
-        "-Wno-error=deprecated",  # Deprecation warnings are never errors.
-        "-Wno-error=deprecated-implementations",  # Deprecation warnings are never errors.
-        "-Wno-sign-conversion",  # Do not warn on sign conversions.
-        "-Wno-unused-parameter",  # Do not warn on unused parameters.
-        "-Woverlength-strings",  # Strings longer than the C maximum.
-        "-Wshadow",  # Local variable shadows another variable, parameter, etc.
-        "-Wstrict-selector-match",  # Compiler can't figure out the right selector.
-        "-Wundeclared-selector",  # Compiler doesn't see a selector.
-        "-Wunreachable-code",  # Code will never be reached.
-    ]
+    deps = [
+        ":CatalogByConventionFrameworkHeaders",
+    ],
+)
+
+apple_framework_relative_headers(
+    name = "CatalogByConventionFrameworkHeaders",
+    hdrs = glob([
+        "src/*.h",
+    ]),
+    framework_name = "CatalogByConvention",
+)
+
+build_test(
+    name = "BuildTest",
+    targets = [
+        ":CatalogByConvention"
+    ],
 )

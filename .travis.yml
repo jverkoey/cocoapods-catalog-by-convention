@@ -1,25 +1,32 @@
 language: objective-c
-osx_image: xcode8.1
-sudo: false
-notifications:
-  email: false
+os: osx
+osx_image:
+  - xcode11.3
+  - xcode11.2
+  - xcode10.3
 env:
-  global:
-  - LC_CTYPE=en_US.UTF-8
-  - LANG=en_US.UTF-8
-  matrix:
-    - DESTINATION="OS=9.3,name=iPhone 6s Plus"
-    - DESTINATION="OS=9.2,name=iPhone 6 Plus"
-    - DESTINATION="OS=9.1,name=iPhone 6s"
-    - DESTINATION="OS=9.0,name=iPhone 6 Plus"
-    - DESTINATION="OS=8.4,name=iPhone 6"
-    - DESTINATION="OS=8.3,name=iPhone 5S"
-    - DESTINATION="OS=8.2,name=iPhone 5"
-    - DESTINATION="OS=8.1,name=iPhone 4s"
+  - TOOLCHAIN=bazel
+  - PROJECT="Catalog"
+jobs:
+  include:
+    - name: "pod lib lint"
+      osx_image: xcode11.3
+      env: TOOLCHAIN=cocoapods
 before_install:
-  - gem install cocoapods --no-rdoc --no-ri --no-document --quiet
-  - gem install xcpretty --no-rdoc --no-ri --no-document --quiet
-  - pod install --project-directory=example/
+  - if [ "$TOOLCHAIN" == "bazel" ]; then
+      wget -O bazelisk "https://github.com/bazelbuild/bazelisk/releases/download/v1.2.1/bazelisk-darwin-amd64";
+      chmod +x "bazelisk";
+    fi
 script:
-  - set -o pipefail
-  - xcodebuild -workspace example/Catalog.xcworkspace -scheme Catalog -destination "$DESTINATION" -configuration Debug ONLY_ACTIVE_ARCH=NO build | xcpretty -c;
+  - if [ "$TOOLCHAIN" == "bazel" ]; then
+      ./bazelisk test //...;
+    elif [ "$TOOLCHAIN" == "cocoapods" ]; then
+      pod lib lint;
+    elif [ "$PROJECT" == "Catalog" ]; then
+      set -o pipefail;
+      pod install --project-directory=example/;
+      xcodebuild build
+        -workspace "Catalog.xcworkspace"
+        -scheme Catalog
+        -destination "platform=iOS Simulator,name=iPhone Xs Max,OS=12.2" | xcpretty;
+    fi
