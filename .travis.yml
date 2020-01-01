@@ -25,8 +25,5 @@ script:
     elif [ "$PROJECT" == "Catalog" ]; then
       set -o pipefail;
       pod install --project-directory=example/;
-      xcodebuild build
-        -workspace "Catalog.xcworkspace"
-        -scheme Catalog
-        -destination "platform=iOS Simulator,name=iPhone Xs Max,OS=12.2" | xcpretty;
+      xcodebuild build -workspace "example/Catalog.xcworkspace" -scheme Catalog -destination "platform=iOS Simulator,name=iPhone Xs Max,OS=12.2" | xcpretty;
     fi
